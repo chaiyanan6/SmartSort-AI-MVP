@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SmartSort AI</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+margin:0;
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+background:linear-gradient(135deg,#6366f1,#8b5cf6,#ec4899);
+background-size:400% 400%;
+animation:bgMove 10s infinite alternate;
+}
+
+@keyframes bgMove{
+0%{background-position:left}
+100%{background-position:right}
+}
+
+.container{
+width:650px;
+background:white;
+padding:40px;
+border-radius:20px;
+box-shadow:0 25px 60px rgba(0,0,0,.25);
+text-align:center;
+}
+
+textarea{
+width:100%;
+height:150px;
+border-radius:12px;
+border:2px solid #e5e7eb;
+padding:15px;
+font-size:16px;
+resize:none;
+}
+
+button{
+margin-top:20px;
+width:100%;
+padding:16px;
+border:none;
+border-radius:12px;
+font-size:18px;
+font-weight:600;
+cursor:pointer;
+color:white;
+background:linear-gradient(90deg,#22c55e,#16a34a);
+}
+
+.result{
+margin-top:25px;
+padding:20px;
+border-radius:15px;
+background:#f0fdf4;
+display:none;
+}
+
+.badge{
+display:inline-block;
+background:#22c55e;
+color:white;
+padding:8px 16px;
+border-radius:30px;
+margin-top:10px;
+font-weight:600;
+}
+
+.progress{
+margin-top:15px;
+height:10px;
+background:#e5e7eb;
+border-radius:10px;
+overflow:hidden;
+}
+
+.progress-bar{
+height:100%;
+background:#22c55e;
+width:0%;
+transition:.6s;
+}
+
+.percent{
+margin-top:8px;
+font-size:14px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🚀 SmartSort AI</h1>
+<p>พิมพ์ปัญหา ระบบจะวิเคราะห์หมวดหมู่ให้อัตโนมัติ</p>
+
+<textarea id="input" placeholder="ตัวอย่าง: แอร์ที่ห้องทำงานเสียครับ"></textarea>
+
+<button onclick="analyze()">ส่งเรื่องและวิเคราะห์</button>
+
+<div class="result" id="result">
+
+<div>✅ ส่งข้อมูลสำเร็จ</div>
+
+<div class="badge" id="category"></div>
+
+<div class="progress">
+<div class="progress-bar" id="bar"></div>
+</div>
+
+<div class="percent" id="percent"></div>
+
+</div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+// =================
+// SUPABASE
+// =================
+
+const SUPABASE_URL = "https://qnhkqmspohufhmvabtuw.supabase.co"
+const SUPABASE_KEY = "sb_publishable_cu66R99IkCLFlZzgSSpdcA_KlT4sue6"
+
+const { createClient } = supabase
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+
+// =================
+// OPENROUTER
+// =================
+
+const OPENROUTER_KEY = "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"
+
+
+
+// =================
+// ANALYZE
+// =================
+
+async function analyze(){
+
+const text = document.getElementById("input").value.trim()
+
+if(!text){
+alert("กรุณากรอกข้อความ")
+return
+}
+
+document.getElementById("result").style.display="block"
+document.getElementById("category").innerText="🤖 AI กำลังวิเคราะห์..."
+document.getElementById("bar").style.width="20%"
+document.getElementById("percent").innerText="กำลังประมวลผล..."
+
+
+let category="สอบถามทั่วไป"
+let confidence=70
+
+try{
+
+const response = await fetch(
+"https://openrouter.ai/api/v1/chat/completions",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer "+OPENROUTER_KEY,
+"HTTP-Referer":"http://localhost",
+"X-Title":"SmartSort AI"
+},
+
+body:JSON.stringify({
+
+model:"openai/gpt-3.5-turbo",
+
+messages:[
+{
+role:"system",
+content:"จัดหมวดหมู่ข้อความร้องเรียนเป็น JSON เท่านั้น"
+},
+{
+role:"user",
+content:`
+ข้อความ: ${text}
+
+หมวดหมู่มี:
+- แจ้งซ่อม/เทคนิค
+- การเงิน/คืนเงิน
+- ร้องเรียนบริการ
+- สอบถามทั่วไป
+
+ตอบ JSON แบบนี้เท่านั้น
+
+{
+"category":"แจ้งซ่อม/เทคนิค",
+"confidence":0.92
+}
+`
+}
+],
+
+temperature:0.2
+
+})
+
+})
+
+
+if(!response.ok){
+throw new Error("API error "+response.status)
+}
+
+const data = await response.json()
+
+let aiText = data.choices[0].message.content
+
+aiText = aiText.replace(/```json/g,"").replace(/```/g,"")
+
+const ai = JSON.parse(aiText)
+
+category = ai.category || "สอบถามทั่วไป"
+confidence = Math.round((ai.confidence || 0.7) * 100)
+
+}catch(err){
+
+console.log("AI ERROR:",err)
+
+category="สอบถามทั่วไป"
+confidence=70
+
+}
+
+
+// =================
+// SAVE DATABASE
+// =================
+
+try{
+
+await supabaseClient
+.from("complaints")
+.insert([
+{
+customer_text:text,
+ai_category:category,
+confidence_score:confidence/100,
+status:"pending"
+}
+])
+
+}catch(err){
+
+console.log("DB error",err)
+
+}
+
+
+// =================
+// SHOW RESULT
+// =================
+
+document.getElementById("category").innerText=category
+document.getElementById("bar").style.width=confidence+"%"
+document.getElementById("percent").innerText="ความมั่นใจ: "+confidence+"%"
+
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Admin Dashboard - SmartSort AI</title>
+
+<style>
+
+body{
+font-family:'Segoe UI',sans-serif;
+margin:0;
+padding:40px;
+background:#f4f6fb;
+}
+
+h2{
+margin-bottom:10px;
+}
+
+button{
+padding:8px 14px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:14px;
+}
+
+.refresh{
+background:#6366f1;
+color:white;
+margin-bottom:15px;
+}
+
+.approve{
+background:#22c55e;
+color:white;
+}
+
+.edit{
+background:#f59e0b;
+color:white;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+box-shadow:0 5px 20px rgba(0,0,0,.08);
+border-radius:10px;
+overflow:hidden;
+}
+
+th{
+background:#6366f1;
+color:white;
+padding:12px;
+text-align:left;
+}
+
+td{
+padding:10px;
+border-bottom:1px solid #eee;
+}
+
+tr:hover{
+background:#f9fafb;
+}
+
+.low-confidence{
+background:#fff1f2;
+}
+
+.badge{
+padding:4px 10px;
+border-radius:20px;
+font-size:12px;
+color:white;
+}
+
+.status-pending{
+background:#f59e0b;
+}
+
+.status-approved{
+background:#22c55e;
+}
+
+.status-edited{
+background:#6366f1;
+}
+
+.confidence-bar{
+height:8px;
+background:#e5e7eb;
+border-radius:5px;
+overflow:hidden;
+}
+
+.confidence-fill{
+height:100%;
+background:#22c55e;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>🚀 SmartSort AI - Admin Dashboard</h2>
+
+<button class="refresh" onclick="loadData()">รีเฟรชข้อมูล</button>
+
+<table>
+
+<thead>
+<tr>
+<th>ข้อความ</th>
+<th>หมวดหมู่ (AI)</th>
+<th>ความมั่นใจ</th>
+<th>สถานะ</th>
+<th>จัดการ</th>
+</tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+
+</table>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const supabaseUrl='https://qnhkqmspohufhmvabtuw.supabase.co'
+
+const supabaseKey='sb_publishable_cu66R99IkCLFlZzgSSpdcA_KlT4sue6'
+
+const {createClient}=supabase
+
+const supabaseClient=createClient(
+supabaseUrl,
+supabaseKey
+)
+
+
+// =================
+// LOAD DATA
+// =================
+
+async function loadData(){
+
+const {data,error}=await supabaseClient
+.from('complaints')
+.select('*')
+.order('created_at',{ascending:false})
+
+const tbody=document.getElementById('tableBody')
+
+tbody.innerHTML=''
+
+data.forEach(item=>{
+
+const percent=Math.round(item.confidence_score*100)
+
+const isLow=item.confidence_score<0.7
+
+const row=`
+
+<tr class="${isLow?'low-confidence':''}">
+
+<td>${item.customer_text}</td>
+
+<td>${item.ai_category}</td>
+
+<td>
+
+${percent}%
+
+<div class="confidence-bar">
+<div class="confidence-fill" style="width:${percent}%"></div>
+</div>
+
+</td>
+
+<td>
+<span class="badge status-${item.status}">
+${item.status}
+</span>
+</td>
+
+<td>
+
+${item.status==='pending' ? `
+
+<button class="approve"
+onclick="updateStatus('${item.id}','approved')">
+ยืนยัน
+</button>
+
+<button class="edit"
+onclick="editItem('${item.id}')">
+แก้ไข
+</button>
+
+` : 'เรียบร้อยแล้ว'}
+
+</td>
+
+</tr>
+
+`
+
+tbody.innerHTML+=row
+
+})
+
+}
+
+
+// =================
+// UPDATE STATUS
+// =================
+
+async function updateStatus(id,status){
+
+await supabaseClient
+.from('complaints')
+.update({status})
+.eq('id',id)
+
+loadData()
+
+}
+
+
+// =================
+// EDIT CATEGORY
+// =================
+
+async function editItem(id){
+
+const newCat=prompt("ระบุหมวดหมู่ที่ถูกต้อง")
+
+if(!newCat) return
+
+await supabaseClient
+.from('complaints')
+.update({
+ai_category:newCat,
+status:'edited'
+})
+.eq('id',id)
+
+loadData()
+
+}
+
+
+loadData()
+
+</script>
+
+</body>
+</html>
