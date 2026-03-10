@@ -1,297 +1,497 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>SmartSort AI</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
 
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --card-bg: rgba(22, 22, 32, 0.85);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --text-primary: #f0f0f5;
+  --text-secondary: #8888a0;
+  --accent-primary: #00d4aa;
+  --accent-secondary: #00b894;
+  --accent-glow: rgba(0, 212, 170, 0.3);
+  --error: #ff6b6b;
+  --warning: #ffd93d;
+}
+
 *{
-box-sizing:border-box;
-font-family:'Segoe UI',sans-serif;
+  box-sizing:border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body{
-margin:0;
-background:linear-gradient(135deg,#6366f1,#8b5cf6,#ec4899);
-background-size:400% 400%;
-animation:bgMove 12s infinite alternate;
-color:white;
+  font-family: 'Inter', sans-serif;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  position: relative;
+  overflow-x: hidden;
+  padding: 20px;
 }
 
-@keyframes bgMove{
-0%{background-position:left}
-100%{background-position:right}
+/* Animated Background */
+.bg-grid {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(0, 212, 170, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 170, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
 }
 
-/* NAVBAR */
-
-.navbar{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:20px 40px;
+.bg-gradient {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0, 212, 170, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(0, 180, 148, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
 }
 
-.logo{
-font-size:22px;
-font-weight:700;
+.floating-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+  animation: float 20s ease-in-out infinite;
 }
 
-/* HERO */
-
-.hero{
-text-align:center;
-padding:60px 20px;
+.orb-1 {
+  width: 400px;
+  height: 400px;
+  background: rgba(0, 212, 170, 0.12);
+  top: -100px;
+  right: -100px;
+  animation-delay: 0s;
 }
 
-.hero h1{
-font-size:42px;
-margin-bottom:10px;
+.orb-2 {
+  width: 300px;
+  height: 300px;
+  background: rgba(0, 180, 148, 0.1);
+  bottom: -50px;
+  left: -50px;
+  animation-delay: -10s;
 }
 
-.hero p{
-opacity:.9;
-}
-
-/* AI BOX */
-
-.main{
-display:flex;
-justify-content:center;
-padding:20px;
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -30px) scale(1.05); }
+  50% { transform: translate(-20px, 20px) scale(0.95); }
+  75% { transform: translate(20px, 30px) scale(1.02); }
 }
 
 .container{
-width:650px;
-max-width:90%;
-padding:35px;
+  width: 100%;
+  max-width: 580px;
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 48px 40px;
+  border-radius: 24px;
+  border: 1px solid var(--card-border);
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 30px 60px -20px rgba(0, 0, 0, 0.5),
+    0 0 100px -30px var(--accent-glow);
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(30px);
+}
 
-border-radius:20px;
+@keyframes cardEntrance {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-background:rgba(255,255,255,0.15);
+/* Logo / Brand */
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  animation: fadeSlideIn 0.6s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
 
-backdrop-filter:blur(20px);
+@keyframes fadeSlideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-box-shadow:0 25px 60px rgba(0,0,0,.3);
+.brand-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px var(--accent-glow);
+}
 
-text-align:center;
+.brand-icon svg {
+  width: 26px;
+  height: 26px;
+  stroke: var(--bg-primary);
+  stroke-width: 2.5;
+  fill: none;
+}
+
+h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 15px;
+  margin-bottom: 32px;
+  animation: fadeSlideIn 0.6s 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Textarea */
+.input-group {
+  position: relative;
+  margin-bottom: 20px;
+  animation: fadeSlideIn 0.6s 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
 }
 
 textarea{
-
-width:100%;
-height:140px;
-
-border:none;
-border-radius:12px;
-
-padding:15px;
-
-font-size:16px;
-
-resize:none;
-
-outline:none;
-
-margin-top:10px;
-
+  width: 100%;
+  height: 140px;
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  padding: 18px 20px;
+  font-size: 15px;
+  font-family: 'Inter', sans-serif;
+  resize: none;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+  line-height: 1.6;
 }
 
-button{
-
-margin-top:20px;
-
-width:100%;
-
-padding:16px;
-
-border:none;
-
-border-radius:12px;
-
-font-size:18px;
-
-font-weight:600;
-
-cursor:pointer;
-
-background:linear-gradient(90deg,#22c55e,#16a34a);
-
-color:white;
-
-transition:.3s;
-
+textarea::placeholder {
+  color: var(--text-secondary);
 }
 
-button:hover{
-transform:translateY(-2px);
-box-shadow:0 10px 25px rgba(0,0,0,.4);
+textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 4px var(--accent-glow);
 }
 
-/* RESULT */
-
-.result{
-margin-top:20px;
-padding:20px;
-border-radius:15px;
-background:rgba(255,255,255,.2);
-display:none;
+textarea:hover:not(:focus) {
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
-.badge{
-display:inline-block;
-background:#22c55e;
-padding:8px 16px;
-border-radius:20px;
-margin-top:10px;
+/* Button */
+button {
+  position: relative;
+  margin-top: 0;
+  width: 100%;
+  padding: 18px 24px;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Space Grotesk', sans-serif;
+  cursor: pointer;
+  color: var(--bg-primary);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeSlideIn 0.6s 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
 }
 
-.progress{
-margin-top:15px;
-height:10px;
-background:rgba(255,255,255,.3);
-border-radius:10px;
-overflow:hidden;
+button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
 }
 
-.progress-bar{
-height:100%;
-background:#22c55e;
-width:0%;
-transition:.6s;
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px var(--accent-glow);
 }
 
-/* FEATURES */
-
-.features{
-
-display:grid;
-
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-
-gap:25px;
-
-padding:60px 40px;
-
+button:hover::before {
+  left: 100%;
 }
 
-.card{
-
-background:rgba(255,255,255,0.15);
-
-backdrop-filter:blur(15px);
-
-padding:25px;
-
-border-radius:18px;
-
-box-shadow:0 10px 40px rgba(0,0,0,.25);
-
-text-align:center;
-
+button:active {
+  transform: translateY(0);
 }
 
-.card h3{
-margin-top:10px;
+/* Result */
+.result {
+  margin-top: 28px;
+  padding: 24px;
+  border-radius: 18px;
+  background: rgba(0, 212, 170, 0.05);
+  border: 1px solid rgba(0, 212, 170, 0.15);
+  display: none;
+  animation: resultReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* FOOTER */
+@keyframes resultReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
 
-.footer{
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--accent-primary);
+  font-weight: 500;
+  margin-bottom: 16px;
+}
 
-text-align:center;
+.result-header svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--accent-primary);
+  stroke-width: 2.5;
+  fill: none;
+}
 
-padding:25px;
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: var(--bg-primary);
+  padding: 12px 24px;
+  border-radius: 100px;
+  font-weight: 600;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
 
-opacity:.8;
+.badge::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: var(--bg-primary);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
 
-font-size:14px;
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
 
+.progress {
+  margin-top: 20px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  width: 0%;
+  border-radius: 100px;
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.percent {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Footer */
+.footer-note {
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  animation: fadeSlideIn 0.6s 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .container {
+    padding: 32px 24px;
+    border-radius: 20px;
+  }
+  
+  h1 {
+    font-size: 26px;
+  }
+  
+  .brand-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .brand-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  textarea {
+    height: 120px;
+    padding: 16px;
+  }
+  
+  button {
+    padding: 16px 20px;
+  }
+  
+  .badge {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
 }
 
 </style>
-
 </head>
 
 <body>
 
-<div class="navbar">
-
-<div class="logo">🚀 SmartSort AI</div>
-
-</div>
-
-<div class="hero">
-
-<h1>ระบบจัดหมวดหมู่ปัญหาด้วย AI</h1>
-
-<p>พิมพ์ปัญหา ระบบจะวิเคราะห์และจัดหมวดหมู่ให้อัตโนมัติ</p>
-
-</div>
-
-<div class="main">
+<div class="bg-grid"></div>
+<div class="bg-gradient"></div>
+<div class="floating-orb orb-1"></div>
+<div class="floating-orb orb-2"></div>
 
 <div class="container">
 
-<textarea id="input" placeholder="ตัวอย่าง: แอร์ที่ห้องทำงานเสียครับ"></textarea>
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <h1>SmartSort AI</h1>
+  </div>
+  
+  <p class="subtitle">ระบบวิเคราะห์และจัดหมวดหมู่ข้อความร้องเรียนอัตโนมัติด้วย AI</p>
 
-<button onclick="analyze()">วิเคราะห์ปัญหา</button>
+  <div class="input-group">
+    <textarea id="input" placeholder="พิมพ์ข้อความร้องเรียนหรือปัญหาที่ต้องการแจ้ง...&#10;&#10;ตัวอย่าง: แอร์ที่ห้องทำงานเสียครับ ไม่มีลมเย็นออกมาเลย"></textarea>
+  </div>
 
-<div class="result" id="result">
+  <button onclick="analyze()">วิเคราะห์หมวดหมู่</button>
 
-<div class="badge" id="category"></div>
+  <div class="result" id="result">
+    
+    <div class="result-header">
+      <svg viewBox="0 0 24 24">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <span>วิเคราะห์สำเร็จ</span>
+    </div>
 
-<div class="progress">
+    <div class="badge" id="category"></div>
 
-<div class="progress-bar" id="bar"></div>
+    <div class="progress">
+      <div class="progress-bar" id="bar"></div>
+    </div>
 
-</div>
+    <div class="percent" id="percent"></div>
 
-<div id="percent"></div>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="features">
-
-<div class="card">
-
-<h3>🤖 AI วิเคราะห์</h3>
-
-<p>ระบบใช้ AI วิเคราะห์ข้อความและจัดหมวดหมู่ให้อัตโนมัติ</p>
-
-</div>
-
-<div class="card">
-
-<h3>⚡ ทำงานรวดเร็ว</h3>
-
-<p>ใช้เวลาเพียงไม่กี่วินาทีในการวิเคราะห์ข้อความ</p>
-
-</div>
-
-<div class="card">
-
-<h3>📊 จัดเก็บข้อมูล</h3>
-
-<p>บันทึกข้อมูลลงฐานข้อมูลเพื่อนำไปวิเคราะห์ต่อ</p>
-
-</div>
-
-</div>
-
-<div class="footer">
-
-© 2025 SmartSort AI
+  </div>
+  
+  <p class="footer-note">Powered by Groq AI + Supabase</p>
 
 </div>
 
@@ -310,148 +510,113 @@ const SUPABASE_KEY = "sb_publishable_cu66R99IkCLFlZzgSSpdcA_KlT4sue6"
 const { createClient } = supabase
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-
 // =================
-// OPENROUTER
+// GROQ API
 // =================
-
-const GROQ_API_KEY = "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"
-
-
+const GROQ_KEY = "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";
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 // =================
 // ANALYZE
 // =================
+async function analyze() {
+    const text = document.getElementById("input").value.trim();
 
-async function analyze(){
+    if (!text) {
+        alert("กรุณากรอกข้อความ");
+        return;
+    }
 
-const text = document.getElementById("input").value.trim()
+    // แสดงสถานะเริ่มต้น
+    const resultDiv = document.getElementById("result");
+    const categoryBadge = document.getElementById("category");
+    const progressBar = document.getElementById("bar");
+    const percentText = document.getElementById("percent");
 
-if(!text){
-alert("กรุณากรอกข้อความ")
-return
-}
+    resultDiv.style.display = "block";
+    categoryBadge.innerText = "Groq AI กำลังวิเคราะห์...";
+    progressBar.style.width = "20%";
+    percentText.innerText = "กำลังเชื่อมต่อ Groq...";
 
-document.getElementById("result").style.display="block"
-document.getElementById("category").innerText="🤖 AI กำลังวิเคราะห์..."
-document.getElementById("bar").style.width="20%"
-document.getElementById("percent").innerText="กำลังประมวลผล..."
+    let category = "สอบถามทั่วไป";
+    let confidence = 0.7;
 
+    try {
+        const response = await fetch(GROQ_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${GROQ_KEY}`
+            },
+            body: JSON.stringify({
+                model: "llama-3.3-70b-versatile", 
+                messages: [
+                    {
+                        role: "system",
+                        content: "คุณคือผู้ช่วยคัดแยกหมวดหมู่ข้อความร้องเรียน ตอบกลับเป็น JSON เท่านั้น"
+                    },
+                    {
+                        role: "user",
+                        content: `จัดหมวดหมู่ข้อความนี้: "${text}" 
+                        
+                        หมวดหมู่ที่มีให้เลือก:
+                        - แจ้งซ่อม/เทคนิค
+                        - การเงิน/คืนเงิน
+                        - ร้องเรียนบริการ
+                        - สอบถามทั่วไป
 
-let category="สอบถามทั่วไป"
-let confidence=70
+                        ตอบในรูปแบบ JSON object:
+                        {
+                            "category": "ชื่อหมวดหมู่",
+                            "confidence": 0.00 ถึง 1.00
+                        }`
+                    }
+                ],
+                response_format: { "type": "json_object" },
+                temperature: 0.1
+            })
+        });
 
-try{
+        if (!response.ok) throw new Error("Groq API Error: " + response.status);
 
-const response = await fetch(
-"https://api.groq.com/openai/v1/chat/completions",
-{
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-"Authorization":"Bearer " + GROQ_API_KEY
-},
+        const data = await response.json();
+        const aiResponse = JSON.parse(data.choices[0].message.content);
 
-body:JSON.stringify({
+        category = aiResponse.category || "สอบถามทั่วไป";
+        confidence = aiResponse.confidence || 0.7;
 
-model:"llama-3.1-8b-instant",
+    } catch (err) {
+        console.error("AI Analysis Failed:", err);
+        category = "เกิดข้อผิดพลาด (ใช้ค่าพื้นฐาน)";
+        confidence = 0.5;
+    }
 
-messages:[
-{
-role:"system",
-content:"จัดหมวดหมู่ข้อความร้องเรียนและตอบเป็น JSON เท่านั้น"
-},
-{
-role:"user",
-content:`
-ข้อความ: ${text}
+    // =================    
+    // SAVE TO SUPABASE
+    // =================
+    try {
+        await supabaseClient
+            .from("complaints")
+            .insert([{
+                customer_text: text,
+                ai_category: category,
+                confidence_score: confidence,
+                status: "pending"
+            }]);
+    } catch (dbErr) {
+        console.error("Supabase Save Error:", dbErr);
+    }
 
-หมวดหมู่มี:
-- แจ้งซ่อม/เทคนิค
-- การเงิน/คืนเงิน
-- ร้องเรียนบริการ
-- สอบถามทั่วไป
-
-ตอบ JSON แบบนี้เท่านั้น
-
-{
-"category":"แจ้งซ่อม/เทคนิค",
-"confidence":0.92
-}
-`
-}
-],
-
-temperature:0.2
-
-})
-
-})
-
-if(!response.ok){
-const err = await response.text()
-console.log("GROQ ERROR:",err)
-throw new Error("API error "+response.status)
-}
-
-const data = await response.json()
-
-let aiText = data.choices[0].message.content
-
-aiText = aiText.replace(/```json/g,"").replace(/```/g,"")
-
-const ai = JSON.parse(aiText)
-
-category = ai.category || "สอบถามทั่วไป"
-confidence = Math.round((ai.confidence || 0.7) * 100)
-
-}catch(err){
-
-console.log("AI ERROR:",err)
-
-category="สอบถามทั่วไป"
-confidence=70
-
-}
-
-
-// =================
-// SAVE DATABASE
-// =================
-
-try{
-
-await supabaseClient
-.from("complaints")
-.insert([
-{
-customer_text:text,
-ai_category:category,
-confidence_score:confidence/100,
-status:"pending"
-}
-])
-
-}catch(err){
-
-console.log("DB error",err)
-
-}
-
-
-// =================
-// SHOW RESULT
-// =================
-
-document.getElementById("category").innerText = category
-document.getElementById("bar").style.width = confidence + "%"
-document.getElementById("percent").innerText = "ความมั่นใจ: " + confidence + "%"
-
+    // =================
+    // SHOW RESULT
+    // =================
+    const displayPercent = Math.round(confidence * 100);
+    categoryBadge.innerText = category;
+    progressBar.style.width = displayPercent + "%";
+    percentText.innerText = "ความมั่นใจ: " + displayPercent + "%";
 }
 
 </script>
 </body>
 
 </html>
-
-
